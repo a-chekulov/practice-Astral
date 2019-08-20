@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">learnHttp</string>
+    <string name="btn_send_response">Отправить запрос на сервер</string>
+    <string name="message_result">Результат запроса:</string>
+</resources>
