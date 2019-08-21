@@ -1,14 +1,17 @@
 package com.achek.learnhttp.presenters;
 
-import android.content.Context;
-import android.view.View;
+import android.app.Activity;
+import android.os.AsyncTask;
 
-import com.achek.learnhttp.activites.MainActivity;
-import com.achek.learnhttp.model.Message;
-import com.achek.learnhttp.model.Utils;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.achek.learnhttp.repository.model.Message;
+import com.achek.learnhttp.repository.Utils.Utils;
 import com.achek.learnhttp.view.MainActivityView;
-import com.achek.learnhttp.view.MessagesApi;
+import com.achek.learnhttp.repository.network.MessagesApi;
+import com.achek.learnhttp.view.activites.MainActivity;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import retrofit2.Call;
@@ -19,15 +22,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivityPresenter {
 
-    private MainActivityView view;
+    private WeakReference<MainActivityView> mainActivityViewWeakReference;
 
-    public MainActivityPresenter(MainActivityView view) {
-        this.view = view;
+    public MainActivityPresenter(WeakReference<MainActivityView> weakReference) {
+        mainActivityViewWeakReference = weakReference;
     }
 
-    public void sendRequest() {
+    public void getMessages() {
 
-        view.startLoading();
+        mainActivityViewWeakReference.get().startLoading();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://rawgit.com/startandroid/data/master/messages/")
@@ -45,18 +48,18 @@ public class MainActivityPresenter {
                         Message item = response.body().get(i);
                         messages += item.getId() + " " + Utils.getDataTimeInMillis(item.getTime()) + " " + "\n";
                     }
-                    view.endLoading();
-                    view.setMassage(messages);
+                    mainActivityViewWeakReference.get().endLoading();
+                    mainActivityViewWeakReference.get().setMassage(messages);
                 } else {
-                    view.endLoading();
-                    view.showError("Response code:" + response.code());
+                    mainActivityViewWeakReference.get().endLoading();
+                    mainActivityViewWeakReference.get().showError("Response code:" + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<List<Message>> call, Throwable t) {
-                view.endLoading();
-                view.showError("failure " + t);
+                mainActivityViewWeakReference.get().endLoading();
+                mainActivityViewWeakReference.get().showError("failure " + t);
             }
         });
     }
