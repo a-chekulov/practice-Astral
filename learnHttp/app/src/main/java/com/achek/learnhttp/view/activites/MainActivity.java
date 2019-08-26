@@ -1,6 +1,6 @@
 package com.achek.learnhttp.view.activites;
-import androidx.appcompat.app.AppCompatActivity;
 
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -8,34 +8,48 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.achek.learnhttp.R;
+import com.achek.learnhttp.di.DaggerAppComponent;
+import com.achek.learnhttp.di.DataModule;
 import com.achek.learnhttp.presenters.MainActivityPresenter;
+import com.achek.learnhttp.repository.network.RequestMessages;
 import com.achek.learnhttp.view.MainActivityView;
 import com.github.rahatarmanahmed.cpv.CircularProgressView;
 
-import java.lang.ref.WeakReference;
+import javax.inject.Inject;
+
+import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements MainActivityView {
 
-    TextView tv_messages;
-    Button btn_send_request;
-    CircularProgressView cpv;
-    MainActivityPresenter presenter;
-    WeakReference<MainActivityView> weakReferenceActivity;
+    private TextView tvMessages;
+    private Button btnSendRequest;
+    private CircularProgressView cpv;
+    private MainActivityPresenter presenter;
+    private RequestMessages requestMessages;
+
+    @Inject
+    protected Retrofit retrofit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tv_messages = findViewById(R.id.tv_messages);
+
+        DaggerAppComponent.builder().dataModule(new DataModule()).build().injectMainActivity(this);
+
+
+        tvMessages = findViewById(R.id.tv_messages);
         cpv = findViewById(R.id.cpv_send_request);
-        btn_send_request = findViewById(R.id.btn_send_response);
+        btnSendRequest = findViewById(R.id.btn_send_response);
 
-        weakReferenceActivity = new WeakReference<MainActivityView>(this);
 
-        presenter = new MainActivityPresenter(weakReferenceActivity);
+        requestMessages = new RequestMessages(retrofit);
 
-        btn_send_request.setOnClickListener(new View.OnClickListener() {
+        presenter = new MainActivityPresenter(requestMessages);
+        presenter.bind(this);
+
+        btnSendRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 presenter.getMessages();
@@ -45,26 +59,25 @@ public class MainActivity extends AppCompatActivity implements MainActivityView 
 
     @Override
     protected void onDestroy() {
+        presenter.deBind();
         super.onDestroy();
-        // presenter = null;
-
     }
 
     @Override
     public void setMassage(String text) {
-        tv_messages.setText(text);
+        tvMessages.setText(text);
     }
 
     @Override
     public void startLoading() {
-        tv_messages.setVisibility(View.INVISIBLE);
+        tvMessages.setVisibility(View.INVISIBLE);
         cpv.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void endLoading() {
         cpv.setVisibility(View.GONE);
-        tv_messages.setVisibility(View.VISIBLE);
+        tvMessages.setVisibility(View.VISIBLE);
     }
 
     @Override
